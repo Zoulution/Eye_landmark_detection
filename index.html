@@ -3,51 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Project Tracker</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Hierarchical Project Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
     }
-
     h1, h2 {
       text-align: center;
     }
-
-    #task-section, #materials {
+    .project {
+      margin: 30px auto;
       width: 80%;
-      margin: 20px auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
     }
-
+    .task-input-section {
+      text-align: center;
+      margin: 10px 0;
+    }
     input[type="text"] {
-      width: 60%;
+      width: 50%;
       padding: 5px;
       margin-right: 10px;
     }
-
     button {
       padding: 5px 10px;
-      margin-left: 5px;
+      margin: 2px;
       cursor: pointer;
     }
-
     ul {
       list-style-type: none;
       padding-left: 0;
     }
-
     li {
       margin: 8px 0;
     }
-
     .status-legend {
       text-align: center;
       margin: 20px 0;
     }
-
     .status-legend span {
       margin: 0 10px;
+    }
+    #materials {
+      width: 80%;
+      margin: 40px auto;
+      border-top: 2px solid #ccc;
+      padding-top: 20px;
     }
   </style>
 </head>
@@ -61,13 +65,8 @@
     <span>❌ - scheduled</span>
   </div>
 
-  <!-- Hierarchical Task Section -->
-  <div id="task-section">
-    <h2>Tasks</h2>
-    <input type="text" id="task-input" placeholder="Enter new task">
-    <button id="add-button">Add Task</button>
-    <ul id="task-list"></ul>
-  </div>
+  <!-- Projects container -->
+  <div id="projects"></div>
 
   <!-- Relevant Materials Section -->
   <div id="materials">
@@ -81,28 +80,53 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const taskInput = document.getElementById("task-input");
-      const addButton = document.getElementById("add-button");
-      const taskList = document.getElementById("task-list");
+      const projectsContainer = document.getElementById("projects");
 
-      let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      // Example initial projects
+      let data = JSON.parse(localStorage.getItem("projectData")) || {
+        "Classification": [],
+        "Segmentation": []
+      };
 
-      function saveTasks() {
-        localStorage.setItem("tasks", JSON.stringify(tasks));
+      function saveData() {
+        localStorage.setItem("projectData", JSON.stringify(data));
       }
 
-      function renderTasks() {
-        taskList.innerHTML = "";
+      function render() {
+        projectsContainer.innerHTML = "";
+        for (let project in data) {
+          const projectDiv = document.createElement("div");
+          projectDiv.className = "project";
 
-        tasks.forEach((task, index) => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            ${statusSymbol(task.status)} ${task.name}
-            <button onclick="deleteTask(${index})">Delete</button>
-            <button onclick="updateStatus(${index})">Update Status</button>
+          // Project title
+          const h2 = document.createElement("h2");
+          h2.textContent = project;
+          projectDiv.appendChild(h2);
+
+          // Task input section
+          const inputSection = document.createElement("div");
+          inputSection.className = "task-input-section";
+          inputSection.innerHTML = `
+            <input type="text" id="input-${project}" placeholder="Add task to ${project}">
+            <button onclick="addTask('${project}')">Add Task</button>
           `;
-          taskList.appendChild(li);
-        });
+          projectDiv.appendChild(inputSection);
+
+          // Task list
+          const ul = document.createElement("ul");
+          data[project].forEach((task, index) => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              ${statusSymbol(task.status)} ${task.name}
+              <button onclick="deleteTask('${project}', ${index})">Delete</button>
+              <button onclick="updateStatus('${project}', ${index})">Update Status</button>
+            `;
+            ul.appendChild(li);
+          });
+
+          projectDiv.appendChild(ul);
+          projectsContainer.appendChild(projectDiv);
+        }
       }
 
       function statusSymbol(status) {
@@ -114,32 +138,33 @@
         }
       }
 
-      addButton.addEventListener("click", () => {
-        const taskName = taskInput.value.trim();
+      window.addTask = function(project) {
+        const input = document.getElementById(`input-${project}`);
+        const taskName = input.value.trim();
         if (taskName) {
-          tasks.push({ name: taskName, status: "scheduled" });
-          taskInput.value = "";
-          saveTasks();
-          renderTasks();
+          data[project].push({ name: taskName, status: "scheduled" });
+          input.value = "";
+          saveData();
+          render();
         }
-      });
-
-      window.deleteTask = function(index) {
-        tasks.splice(index, 1);
-        saveTasks();
-        renderTasks();
       }
 
-      window.updateStatus = function(index) {
+      window.deleteTask = function(project, index) {
+        data[project].splice(index, 1);
+        saveData();
+        render();
+      }
+
+      window.updateStatus = function(project, index) {
         const statuses = ["scheduled", "in progress", "completed"];
-        const currentIndex = statuses.indexOf(tasks[index].status);
+        const currentIndex = statuses.indexOf(data[project][index].status);
         const nextIndex = (currentIndex + 1) % statuses.length;
-        tasks[index].status = statuses[nextIndex];
-        saveTasks();
-        renderTasks();
+        data[project][index].status = statuses[nextIndex];
+        saveData();
+        render();
       }
 
-      renderTasks();
+      render();
     });
   </script>
 </body>
