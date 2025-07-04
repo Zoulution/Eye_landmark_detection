@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>My Project Tracker</h1>
+
+  <div id="status-legend">
+    Status: ✅ - completed, 🟠 - in progress, ❌ - scheduled.
+  </div>
+
+  <form id="task-form">
+    <input type="text" id="task-input" placeholder="New task..." required />
+    <select id="status-input">
+      <option value="completed">✅</option>
+      <option value="in progress">🟠</option>
+      <option value="scheduled">❌</option>
+    </select>
+    <button type="submit">Add Task</button>
+  </form>
+
+  <table id="task-table">
+    <tr>
+      <th>Task</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </table>
+
+  <script src="script.js"></script>
+</body>
+</html>
