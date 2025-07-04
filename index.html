@@ -5,32 +5,142 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Tracker</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    #task-section, #materials {
+      width: 80%;
+      margin: 20px auto;
+    }
+
+    input[type="text"] {
+      width: 60%;
+      padding: 5px;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 5px 10px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    li {
+      margin: 8px 0;
+    }
+
+    .status-legend {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .status-legend span {
+      margin: 0 10px;
+    }
+  </style>
 </head>
 <body>
   <h1>My Project Tracker</h1>
 
-  <div id="status-legend">
-    Status: ✅ - completed, 🟠 - in progress, ❌ - scheduled.
+  <div class="status-legend">
+    Status:
+    <span>✅ - completed</span>
+    <span>🟠 - in progress</span>
+    <span>❌ - scheduled</span>
   </div>
 
-  <form id="task-form">
-    <input type="text" id="task-input" placeholder="New task..." required />
-    <select id="status-input">
-      <option value="completed">✅</option>
-      <option value="in progress">🟠</option>
-      <option value="scheduled">❌</option>
-    </select>
-    <button type="submit">Add Task</button>
-  </form>
+  <!-- Hierarchical Task Section -->
+  <div id="task-section">
+    <h2>Tasks</h2>
+    <input type="text" id="task-input" placeholder="Enter new task">
+    <button id="add-button">Add Task</button>
+    <ul id="task-list"></ul>
+  </div>
 
-  <table id="task-table">
-    <tr>
-      <th>Task</th>
-      <th>Status</th>
-      <th>Action</th>
-    </tr>
-  </table>
+  <!-- Relevant Materials Section -->
+  <div id="materials">
+    <h2>Relevant Materials</h2>
+    <ul>
+      <li><a href="https://example.com/paper1" target="_blank">Paper 1: Deep Learning for Eye Landmarks</a></li>
+      <li><a href="https://example.com/dataset" target="_blank">Dataset: Eye Landmark Dataset</a></li>
+      <li><a href="https://example.com/tutorial" target="_blank">Tutorial: Flask Deployment</a></li>
+    </ul>
+  </div>
 
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const taskInput = document.getElementById("task-input");
+      const addButton = document.getElementById("add-button");
+      const taskList = document.getElementById("task-list");
+
+      let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+      function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+
+      function renderTasks() {
+        taskList.innerHTML = "";
+
+        tasks.forEach((task, index) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            ${statusSymbol(task.status)} ${task.name}
+            <button onclick="deleteTask(${index})">Delete</button>
+            <button onclick="updateStatus(${index})">Update Status</button>
+          `;
+          taskList.appendChild(li);
+        });
+      }
+
+      function statusSymbol(status) {
+        switch (status) {
+          case "completed": return "✅";
+          case "in progress": return "🟠";
+          case "scheduled": return "❌";
+          default: return "";
+        }
+      }
+
+      addButton.addEventListener("click", () => {
+        const taskName = taskInput.value.trim();
+        if (taskName) {
+          tasks.push({ name: taskName, status: "scheduled" });
+          taskInput.value = "";
+          saveTasks();
+          renderTasks();
+        }
+      });
+
+      window.deleteTask = function(index) {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTasks();
+      }
+
+      window.updateStatus = function(index) {
+        const statuses = ["scheduled", "in progress", "completed"];
+        const currentIndex = statuses.indexOf(tasks[index].status);
+        const nextIndex = (currentIndex + 1) % statuses.length;
+        tasks[index].status = statuses[nextIndex];
+        saveTasks();
+        renderTasks();
+      }
+
+      renderTasks();
+    });
+  </script>
 </body>
 </html>

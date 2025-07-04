@@ -1,29 +1,27 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("task-form");
   const taskInput = document.getElementById("task-input");
-  const statusInput = document.getElementById("status-input");
-  const table = document.getElementById("task-table");
+  const addButton = document.getElementById("add-button");
+  const taskList = document.getElementById("task-list");
 
+  // Load tasks from localStorage or initialize as empty array
   let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
+  function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
   function renderTasks() {
-    // Clear existing rows except header
-    table.innerHTML = `
-      <tr>
-        <th>Task</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    `;
+    // Clear current list
+    taskList.innerHTML = "";
+
     tasks.forEach((task, index) => {
-      const row = table.insertRow();
-      row.insertCell(0).textContent = task.name;
-      row.insertCell(1).textContent = statusSymbol(task.status);
-      const actionCell = row.insertCell(2);
-      const updateButton = document.createElement("button");
-      updateButton.textContent = "Update Status";
-      updateButton.onclick = () => updateStatus(index);
-      actionCell.appendChild(updateButton);
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${statusSymbol(task.status)} ${task.name}
+        <button onclick="deleteTask(${index})">Delete</button>
+        <button onclick="updateStatus(${index})">Update Status</button>
+      `;
+      taskList.appendChild(li);
     });
   }
 
@@ -32,32 +30,35 @@ document.addEventListener("DOMContentLoaded", () => {
       case "completed": return "✅";
       case "in progress": return "🟠";
       case "scheduled": return "❌";
+      default: return "";
     }
   }
 
-  function updateStatus(index) {
-    const current = tasks[index].status;
-    const statuses = ["completed", "in progress", "scheduled"];
-    const next = statuses[(statuses.indexOf(current) + 1) % statuses.length];
-    tasks[index].status = next;
-    saveAndRender();
-  }
+  addButton.addEventListener("click", () => {
+    const taskName = taskInput.value.trim();
+    if (taskName) {
+      tasks.push({ name: taskName, status: "scheduled" }); // default status
+      taskInput.value = "";
+      saveTasks();
+      renderTasks();
+    }
+  });
 
-  function saveAndRender() {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+  // Make deleteTask globally accessible
+  window.deleteTask = function(index) {
+    tasks.splice(index, 1);
+    saveTasks();
     renderTasks();
   }
 
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-    const newTask = {
-      name: taskInput.value.trim(),
-      status: statusInput.value
-    };
-    tasks.push(newTask);
-    taskInput.value = "";
-    saveAndRender();
-  });
+  window.updateStatus = function(index) {
+    const statuses = ["scheduled", "in progress", "completed"];
+    const currentIndex = statuses.indexOf(tasks[index].status);
+    const nextIndex = (currentIndex + 1) % statuses.length;
+    tasks[index].status = statuses[nextIndex];
+    saveTasks();
+    renderTasks();
+  }
 
   renderTasks();
 });
