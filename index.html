@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hierarchical Project Tracker</title>
+  <title>Hierarchical Project Tracker with Notes</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,7 +24,7 @@
       margin: 10px 0;
     }
     input[type="text"] {
-      width: 50%;
+      width: 30%;
       padding: 5px;
       margin-right: 10px;
     }
@@ -38,7 +38,7 @@
       padding-left: 0;
     }
     li {
-      margin: 8px 0;
+      margin: 10px 0;
     }
     .status-legend {
       text-align: center;
@@ -53,10 +53,20 @@
       border-top: 2px solid #ccc;
       padding-top: 20px;
     }
+    .note {
+      display: block;
+      margin-top: 5px;
+      font-size: 0.95em;
+      color: #333;
+    }
+    .note-input {
+      width: 60%;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
-  <h1>My Project Tracker</h1>
+  <h1>My Project Tracker with Notes</h1>
 
   <div class="status-legend">
     Status:
@@ -82,10 +92,12 @@
     document.addEventListener("DOMContentLoaded", () => {
       const projectsContainer = document.getElementById("projects");
 
-      // Example initial projects
       let data = JSON.parse(localStorage.getItem("projectData")) || {
-        "Classification": [],
-        "Segmentation": []
+        "Literature Review": [],
+        "Baseline Inplementation": [],
+        "Custom Dataset Preparation": [],
+        "Final Model Training & Evaluation": [],
+        "Method Improvement": []
       };
 
       function saveData() {
@@ -98,26 +110,27 @@
           const projectDiv = document.createElement("div");
           projectDiv.className = "project";
 
-          // Project title
           const h2 = document.createElement("h2");
           h2.textContent = project;
           projectDiv.appendChild(h2);
 
-          // Task input section
           const inputSection = document.createElement("div");
           inputSection.className = "task-input-section";
           inputSection.innerHTML = `
             <input type="text" id="input-${project}" placeholder="Add task to ${project}">
+            <input type="text" id="note-${project}" placeholder="Add note (optional)">
             <button onclick="addTask('${project}')">Add Task</button>
           `;
           projectDiv.appendChild(inputSection);
 
-          // Task list
           const ul = document.createElement("ul");
           data[project].forEach((task, index) => {
             const li = document.createElement("li");
             li.innerHTML = `
-              ${statusSymbol(task.status)} ${task.name}
+              ${statusSymbol(task.status)} <strong>${task.name}</strong>
+              <span class="note">Note: ${task.note || ''}</span>
+              <input type="text" class="note-input" placeholder="Edit note" onchange="editNote('${project}', ${index}, this.value)">
+              <br>
               <button onclick="deleteTask('${project}', ${index})">Delete</button>
               <button onclick="updateStatus('${project}', ${index})">Update Status</button>
             `;
@@ -139,11 +152,15 @@
       }
 
       window.addTask = function(project) {
-        const input = document.getElementById(`input-${project}`);
-        const taskName = input.value.trim();
+        const taskInput = document.getElementById(`input-${project}`);
+        const noteInput = document.getElementById(`note-${project}`);
+        const taskName = taskInput.value.trim();
+        const note = noteInput.value.trim();
+
         if (taskName) {
-          data[project].push({ name: taskName, status: "scheduled" });
-          input.value = "";
+          data[project].push({ name: taskName, status: "scheduled", note: note });
+          taskInput.value = "";
+          noteInput.value = "";
           saveData();
           render();
         }
@@ -162,6 +179,11 @@
         data[project][index].status = statuses[nextIndex];
         saveData();
         render();
+      }
+
+      window.editNote = function(project, index, newNote) {
+        data[project][index].note = newNote;
+        saveData();
       }
 
       render();

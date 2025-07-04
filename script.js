@@ -1,28 +1,52 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const taskInput = document.getElementById("task-input");
-  const addButton = document.getElementById("add-button");
-  const taskList = document.getElementById("task-list");
+  const projectsContainer = document.getElementById("projects");
 
-  // Load tasks from localStorage or initialize as empty array
-  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  // Load from localStorage or initialize default projects
+  let data = JSON.parse(localStorage.getItem("projectData")) || {
+    "Classification": [],
+    "Segmentation": []
+  };
 
-  function saveTasks() {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+  function saveData() {
+    localStorage.setItem("projectData", JSON.stringify(data));
   }
 
-  function renderTasks() {
-    // Clear current list
-    taskList.innerHTML = "";
+  function render() {
+    projectsContainer.innerHTML = "";
+    for (let project in data) {
+      const projectDiv = document.createElement("div");
+      projectDiv.className = "project";
 
-    tasks.forEach((task, index) => {
-      const li = document.createElement("li");
-      li.innerHTML = `
-        ${statusSymbol(task.status)} ${task.name}
-        <button onclick="deleteTask(${index})">Delete</button>
-        <button onclick="updateStatus(${index})">Update Status</button>
+      const h2 = document.createElement("h2");
+      h2.textContent = project;
+      projectDiv.appendChild(h2);
+
+      const inputSection = document.createElement("div");
+      inputSection.className = "task-input-section";
+      inputSection.innerHTML = `
+        <input type="text" id="input-${project}" placeholder="Add task to ${project}">
+        <input type="text" id="note-${project}" placeholder="Add note (optional)">
+        <button onclick="addTask('${project}')">Add Task</button>
       `;
-      taskList.appendChild(li);
-    });
+      projectDiv.appendChild(inputSection);
+
+      const ul = document.createElement("ul");
+      data[project].forEach((task, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${statusSymbol(task.status)} <strong>${task.name}</strong>
+          <span class="note">Note: ${task.note || ''}</span>
+          <input type="text" class="note-input" placeholder="Edit note" value="${task.note || ''}" onchange="editNote('${project}', ${index}, this.value)">
+          <br>
+          <button onclick="deleteTask('${project}', ${index})">Delete</button>
+          <button onclick="updateStatus('${project}', ${index})">Update Status</button>
+        `;
+        ul.appendChild(li);
+      });
+
+      projectDiv.appendChild(ul);
+      projectsContainer.appendChild(projectDiv);
+    }
   }
 
   function statusSymbol(status) {
@@ -34,31 +58,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  addButton.addEventListener("click", () => {
+  window.addTask = function(project) {
+    const taskInput = document.getElementById(`input-${project}`);
+    const noteInput = document.getElementById(`note-${project}`);
     const taskName = taskInput.value.trim();
+    const note = noteInput.value.trim();
+
     if (taskName) {
-      tasks.push({ name: taskName, status: "scheduled" }); // default status
+      data[project].push({ name: taskName, status: "scheduled", note: note });
       taskInput.value = "";
-      saveTasks();
-      renderTasks();
+      noteInput.value = "";
+      saveData();
+      render();
     }
-  });
-
-  // Make deleteTask globally accessible
-  window.deleteTask = function(index) {
-    tasks.splice(index, 1);
-    saveTasks();
-    renderTasks();
   }
 
-  window.updateStatus = function(index) {
+  window.deleteTask = function(project, index) {
+    data[project].splice(index, 1);
+    saveData();
+    render();
+  }
+
+  window.updateStatus = function(project, index) {
     const statuses = ["scheduled", "in progress", "completed"];
-    const currentIndex = statuses.indexOf(tasks[index].status);
+    const currentIndex = statuses.indexOf(data[project][index].status);
     const nextIndex = (currentIndex + 1) % statuses.length;
-    tasks[index].status = statuses[nextIndex];
-    saveTasks();
-    renderTasks();
+    data[project][index].status = statuses[nextIndex];
+    saveData();
+    render();
   }
 
-  renderTasks();
+  window.editNote = function(project, index, newNote) {
+    data[project][index].note = newNote;
+    saveData();
+  }
+
+  render();
 });
