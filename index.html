@@ -145,13 +145,15 @@
             const li = document.createElement("li");
             li.innerHTML = `
               ${statusSymbol(task.status)} <strong>${task.name}</strong>
-              <span class="note">Note: ${task.note || ''}</span>
-              <input type="text" class="note-input"
-                    placeholder="Edit note"
-                    onchange="editNote(${task.id}, this.value, '${task.status}')">
+              <input
+                type="text"
+                class="note-input"
+                placeholder="Edit note"
+                onchange="editNote(${task.id}, this.value, '${task.status}')"
+              >
               <br>
               <button onclick="deleteTask(${task.id})">Delete</button>
-              <button onclick="updateStatus(${task.id}, '${task.status}', '${task.note}')">
+              <button onclick="updateStatus(${task.id}, '${task.status}', '')">
                 Update Status
               </button>
             `;
