@@ -141,15 +141,20 @@
           li.textContent = "No tasks yet.";
           ul.appendChild(li);
         } else {
-          data[project].forEach((task, index) => {
+          data[project].forEach(task => {
             const li = document.createElement("li");
             li.innerHTML = `
               ${statusSymbol(task.status)} <strong>${task.name}</strong>
               <span class="note">Note: ${task.note || ''}</span>
-              <input type="text" class="note-input" placeholder="Edit note" onchange="editNote('${project}', ${index}, this.value)">
+              <input type="text" class="note-input"
+                    placeholder="Edit note"
+                    value="${task.note || ''}"
+                    onchange="editNote(${task.id}, this.value, '${task.status}')">
               <br>
-              <button onclick="deleteTask('${project}', ${index})">Delete</button>
-              <button onclick="updateStatus('${project}', ${index})">Update Status</button>
+              <button onclick="deleteTask(${task.id})">Delete</button>
+              <button onclick="updateStatus(${task.id}, '${task.status}', '${task.note}')">
+                Update Status
+              </button>
             `;
             ul.appendChild(li);
           });
