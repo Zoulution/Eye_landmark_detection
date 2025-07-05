@@ -148,7 +148,6 @@
               <span class="note">Note: ${task.note || ''}</span>
               <input type="text" class="note-input"
                     placeholder="Edit note"
-                    value="${task.note || ''}"
                     onchange="editNote(${task.id}, this.value, '${task.status}')">
               <br>
               <button onclick="deleteTask(${task.id})">Delete</button>
