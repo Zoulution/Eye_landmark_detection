@@ -96,19 +96,23 @@
     }
 
     async function loadTasks() {
-      const response = await fetch(`${API_URL}/tasks`);
-      const tasks = await response.json();
-
       const data = {};
-      projectList.forEach(p => data[p] = []); // initialize all projects
+      projectList.forEach(p => data[p] = []); // initialize
 
-      tasks.forEach(task => {
-        if (!data[task.project]) data[task.project] = [];
-        data[task.project].push(task);
-      });
+      try {
+        const response = await fetch(`${API_URL}/tasks`);
+        const tasks = await response.json();
+        tasks.forEach(t => {
+          if (!data[t.project]) data[t.project] = [];
+          data[t.project].push(t);
+        });
+      } catch (err) {
+        console.error("Couldn’t load tasks:", err);
+      }
 
       render(data);
     }
+
 
     function render(data) {
       projectsContainer.innerHTML = "";
